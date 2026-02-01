@@ -46,8 +46,12 @@ The platform is built on six core AI components powered by Large Language Models
 
 ### Tech Stack
 
-- **AI Layer**: LLM APIs (OpenAI GPT-4, Anthropic Claude)
-- **Data Storage**: JSON-based document storage (MongoDB)
+- **Framework**: Next.js 14 (App Router)
+- **Frontend**: React + Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth (Email + Google)
+- **AI Layer**: OpenAI GPT-4 Turbo
+- **Hosting**: Vercel
 - **Payments**: UPI integration (Razorpay/PayU/Cashfree)
 - **Compliance**: Automatic GST invoice generation
 - **Testing**: Property-based testing with fast-check/Hypothesis
@@ -56,9 +60,34 @@ The platform is built on six core AI components powered by Large Language Models
 
 ```
 creatoros-ai/
-├── requirements.md    # Detailed functional requirements
-├── design.md         # Complete system design & architecture
-└── README.md         # This file
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── api/
+│   │   │   └── creator-dna/
+│   │   │       └── scan/       # POST /api/creator-dna/scan
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── globals.css
+│   ├── services/
+│   │   └── creator-dna/        # Creator DNA Scanner service
+│   │       ├── index.ts        # Main entry point
+│   │       ├── analyzers.ts    # Attribute analyzers
+│   │       ├── aggregator.ts   # Content aggregation
+│   │       ├── parsers.ts      # LLM response parsers
+│   │       └── storage.ts      # Supabase storage
+│   ├── lib/
+│   │   ├── openai.ts           # OpenAI client
+│   │   ├── supabase.ts         # Supabase client
+│   │   └── prompts.ts          # LLM prompt templates
+│   └── types/
+│       ├── creator-dna.ts      # Type definitions
+│       ├── schemas.ts          # Zod validation schemas
+│       └── database.ts         # Supabase types
+├── supabase/
+│   └── migrations/             # Database migrations
+├── requirements.md
+├── design.md
+└── README.md
 ```
 
 ## 🎨 Key Features
@@ -138,7 +167,87 @@ Example property:
 - Audience reaction prediction: 1-2 seconds
 - Payment processing: <2 seconds
 
-## 🔒 Security & Compliance
+## � Quick Start
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- Supabase account
+- OpenAI API key
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/nidhishmg/creatoros-ai.git
+cd creatoros-ai
+
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env.local
+
+# Add your API keys to .env.local
+# NEXT_PUBLIC_SUPABASE_URL=
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=
+# SUPABASE_SERVICE_ROLE_KEY=
+# OPENAI_API_KEY=
+
+# Run database migrations in Supabase SQL Editor
+# (copy contents of supabase/migrations/001_creator_dna_schema.sql)
+
+# Start development server
+npm run dev
+```
+
+### API Usage
+
+**Scan Creator DNA:**
+
+```bash
+curl -X POST http://localhost:3000/api/creator-dna/scan \
+  -H "Content-Type: application/json" \
+  -d '{
+    "creator_id": "creator123",
+    "posts": [
+      {
+        "content": "Just dropped a new video explaining quantum computing to my cat 😂",
+        "post_type": "reel",
+        "engagement": { "likes": 15000, "comments": 500, "shares": 200 },
+        "comments_sample": ["This is hilarious!", "Actually learned something"],
+        "posted_at": "2025-01-15T10:00:00Z"
+      }
+    ]
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "profile": {
+    "creator_id": "creator123",
+    "generated_at": "2025-01-31T12:00:00Z",
+    "creator_dna": {
+      "primary_tone": "educational",
+      "humor_level": 7,
+      "dark_humor_present": false,
+      "risk_tolerance": "medium",
+      "audience_type": "educational / learner-focused",
+      "confidence": {
+        "tone": 0.85,
+        "humor": 0.78,
+        "risk": 0.72,
+        "audience": 0.80
+      }
+    }
+  }
+}
+```
+
+## �🔒 Security & Compliance
 
 - **Encryption**: AES-256 at rest, TLS 1.3 in transit
 - **Authentication**: Multi-factor authentication for creators
