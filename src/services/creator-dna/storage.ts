@@ -4,8 +4,46 @@
  * Handles saving and retrieving Creator DNA profiles from Supabase.
  */
 
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import type { CreatorDNAProfile } from '@/types';
+
+/**
+ * Create Supabase admin client for server-side operations
+ */
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Supabase environment variables are not set');
+  }
+  
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
+// Type for the database row
+interface CreatorDNARow {
+  id: string;
+  creator_id: string;
+  generated_at: string;
+  primary_tone: string;
+  humor_level: number;
+  dark_humor_present: boolean;
+  risk_tolerance: string;
+  audience_type: string;
+  confidence_tone: number;
+  confidence_humor: number;
+  confidence_risk: number;
+  confidence_audience: number;
+  raw_profile: CreatorDNAProfile;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Save a Creator DNA profile to the database
@@ -29,7 +67,7 @@ export async function saveCreatorDNAProfile(
       confidence_humor: profile.creator_dna.confidence.humor,
       confidence_risk: profile.creator_dna.confidence.risk,
       confidence_audience: profile.creator_dna.confidence.audience,
-      raw_profile: profile, // Store full JSON for future reference
+      raw_profile: profile as unknown as Record<string, unknown>,
       updated_at: new Date().toISOString(),
     }, {
       onConflict: 'creator_id',
@@ -55,13 +93,13 @@ export async function getCreatorDNAProfile(
     .from('creator_dna_profiles')
     .select('raw_profile')
     .eq('creator_id', creatorId)
-    .single();
+    .single<{ raw_profile: CreatorDNAProfile }>();
   
   if (error || !data) {
     return null;
   }
   
-  return data.raw_profile as CreatorDNAProfile;
+  return data.raw_profile;
 }
 
 /**
@@ -103,7 +141,7 @@ export async function listCreatorDNAProfiles(
     .from('creator_dna_profiles')
     .select('raw_profile', { count: 'exact' })
     .range(offset, offset + pageSize - 1)
-    .order('updated_at', { ascending: false });
+    .order('updated_at', { ascending: false }) as { data: { raw_profile: CreatorDNAProfile }[] | null; error: any; count: number | null };
   
   if (error || !data) {
     return { profiles: [], total: 0, hasMore: false };

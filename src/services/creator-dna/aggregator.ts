@@ -133,7 +133,7 @@ function normalizeText(text: string): string {
     // Normalize whitespace
     .replace(/\s+/g, ' ')
     // Limit consecutive emojis
-    .replace(/([\u{1F300}-\u{1F9FF}])\1{2,}/gu, '$1$1')
+    .replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])\1{2,}/g, '$1$1')
     // Trim
     .trim();
 }

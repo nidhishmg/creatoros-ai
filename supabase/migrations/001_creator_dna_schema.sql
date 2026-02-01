@@ -5,7 +5,8 @@
 -- ============================================================================
 
 -- Enable UUID extension if not already enabled
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Note: In Supabase, this extension is usually already enabled
+CREATE EXTENSION IF NOT EXISTS uuid-ossp;
 
 -- ============================================================================
 -- TABLES
